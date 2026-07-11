@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="toolbar">
+  <div>
+    <h1>Inbox Review</h1>
+    <p>Classify incoming emails, review mail type, generate drafts only when needed, edit, approve, and send.</p>
+  </div>
+  <div class="actions">
+    {% if connected %}
+      <span class="status good">Gmail connected{% if connected_email %}: {{ connected_email }}{% endif %}</span>
+      <a class="button secondary" href="/auth/logout">Switch Gmail</a>
+    {% elif oauth_available %}
+      <a class="button secondary" href="/auth/login">Connect Gmail</a>
+    {% else %}
+      <span class="status">Demo mode</span>
+    {% endif %}
+    <form method="post" action="/emails/sync">
+      <button type="submit">Sync Inbox</button>
+    </form>
+    <form method="post" action="/emails/classify-pending">
+      <button type="submit" class="secondary">Classify Pending</button>
+    </form>
+  </div>
+</section>
+
+{% if classified is not none %}
+<section class="notice">
+  Classified {{ classified }} unsent email{% if classified != 1 %}s{% endif %}.
+</section>
+{% endif %}
+
+{% if error %}
+<section class="notice error">
+  {{ error }}
+</section>
+{% endif %}
+
+<section class="metrics">
+  <div><strong>{{ stats.total }}</strong><span>Total</span></div>
+  <div><strong>{{ stats.new }}</strong><span>New</span></div>
+  <div><strong>{{ stats.drafted }}</strong><span>Drafted</span></div>
+  <div><strong>{{ stats.sent }}</strong><span>Sent</span></div>
+</section>
+
+<form class="filters" method="get" action="/">
+  <input type="search" name="q" value="{{ filters.q }}" placeholder="Search sender, subject, or body">
+  <select name="category">
+    <option value="">All categories</option>
+    {% for item in ["urgent", "spam", "general enquiry", "follow-up"] %}
+      <option value="{{ item }}" {% if filters.category == item %}selected{% endif %}>{{ item }}</option>
+    {% endfor %}
+  </select>
+  <select name="mail_type">
+    <option value="">All types</option>
+    {% for item in ["reply", "no-reply", "notification", "promotional", "transactional"] %}
+      <option value="{{ item }}" {% if filters.mail_type == item %}selected{% endif %}>{{ item }}</option>
+    {% endfor %}
+  </select>
+  <select name="status">
+    <option value="">All statuses</option>
+    {% for item in ["new", "drafted", "sent"] %}
+      <option value="{{ item }}" {% if filters.status == item %}selected{% endif %}>{{ item }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit">Apply</button>
+  <a class="button ghost" href="/">Reset</a>
+</form>
+
+<section class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Sender</th>
+        <th>Subject</th>
+        <th>Category</th>
+        <th>Type</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for email in emails %}
+      <tr>
+        <td>{{ email.sender }}</td>
+        <td>
+          <strong>{{ email.subject }}</strong>
+          <span>{{ email.snippet }}</span>
+        </td>
+        <td><span class="status category-{{ (email.category or 'none')|replace(' ', '-') }}">{{ email.category or "Not classified" }}</span></td>
+        <td><span class="status type-{{ (email.mail_type or 'none')|replace(' ', '-') }}">{{ email.mail_type or "Unknown" }}</span></td>
+        <td><span class="status status-{{ email.status }}">{{ email.status }}</span></td>
+        <td><a class="button small" href="/emails/{{ email.id }}">Review</a></td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="6" class="empty">No emails yet. Sync the inbox to load Gmail messages or demo examples.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

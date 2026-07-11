@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="toolbar">
+  <div>
+    <h1>Reply Logs</h1>
+    <p>Approved replies are recorded here for audit and demonstration.</p>
+  </div>
+</section>
+
+<section class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Sent At</th>
+        <th>Original Email</th>
+        <th>Status</th>
+        <th>Reply</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for log in logs %}
+      <tr>
+        <td>{{ log.sent_at }}</td>
+        <td>
+          <strong>{{ log.subject }}</strong>
+          <span>{{ log.sender }}</span>
+        </td>
+        <td><span class="status status-sent">{{ log.status }}</span></td>
+        <td>{{ log.reply_body }}</td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="4" class="empty">No approved replies yet.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

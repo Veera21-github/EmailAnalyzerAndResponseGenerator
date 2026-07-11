@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="detail-grid">
+  <article class="panel">
+    <a class="back" href="/">Back to inbox</a>
+    <h1>{{ email.subject }}</h1>
+    <dl>
+      <dt>From</dt>
+      <dd>{{ email.sender }}</dd>
+      <dt>Received</dt>
+      <dd>{{ email.received_at }}</dd>
+      <dt>Category</dt>
+      <dd>{{ email.category or "Not classified" }}{% if email.confidence %} - {{ "%.0f"|format(email.confidence * 100) }}%{% endif %}</dd>
+      <dt>Type</dt>
+      <dd>{{ email.mail_type or "Unknown" }}</dd>
+      <dt>Status</dt>
+      <dd>{{ email.status }}</dd>
+    </dl>
+    <div class="email-body">{{ email.body }}</div>
+    <form method="post" action="/emails/{{ email.id }}/classify">
+      <button type="submit">Classify Email</button>
+    </form>
+
+    {% if thread_history %}
+    <section class="thread">
+      <h2>Thread History</h2>
+      {% for item in thread_history %}
+        <article>
+          <strong>{{ item.sender }}</strong>
+          <span>{{ item.subject }}</span>
+          <p>{{ item.snippet }}</p>
+        </article>
+      {% endfor %}
+    </section>
+    {% endif %}
+  </article>
+<aside class="panel">
+  <h2>AI Draft</h2>
+
+  <form method="post" action="/emails/{{ email.id }}/draft">
+    <button type="submit">Generate Draft</button>
+  </form>
+
+  <form method="post" action="/emails/{{ email.id }}/send">
+    <textarea
+      name="reply_body"
+      rows="16"
+      placeholder="Generate a draft for this email only."
+    >{{ email.draft_reply or "" }}</textarea>
+
+    <button type="submit">Approve & Send</button>
+  </form>
+
+  {% if email.status == "sent" %}
+    <p class="sent">Reply approved and sent successfully.</p>
+  {% endif %}
+</aside>
+</section>
+{% endblock %}
